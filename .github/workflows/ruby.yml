@@ -32,6 +32,6 @@ jobs:
       with:
         github_token: ${{ secrets.github_token }}
     - name: Set up nokogiri
-      run: sudo apt install ruby-nokogori
+      run: bundle install
     - name: make
       run: make
