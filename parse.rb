@@ -42,7 +42,7 @@ module Table
     return @h if @h
 
     a = to_a.dup
-    header = a .shift
+    header = a.shift
     @h = a.map do |v|
       j = header.each_with_index.map { |i, h| [i, v[h]] }
       j.delete_if { |i| i[1].empty? or i[1].nil? }
