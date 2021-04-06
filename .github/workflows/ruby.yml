@@ -29,4 +29,6 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Rubocop
-      run: rubocop
+      uses: reviewdog/action-rubocop@v1
+      with:
+        github_token: ${{ secrets.github_token }}
