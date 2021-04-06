@@ -17,10 +17,6 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ruby-version: ['2.5', '2.7', '3.0']
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
@@ -32,3 +28,7 @@ jobs:
       uses: reviewdog/action-rubocop@v1
       with:
         github_token: ${{ secrets.github_token }}
+    - name: Set up nokogiri
+      run: apt install ruby-nokogori
+    - name: make
+      run: make
