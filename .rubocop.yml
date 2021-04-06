@@ -1,0 +1,4 @@
+Style/PerlBackrefs:
+  Enabled: false
+Style/Documentation:
+  Enabled: false
