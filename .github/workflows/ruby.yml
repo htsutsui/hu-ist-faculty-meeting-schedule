@@ -19,16 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['2.5', '2.7', '3.0']
-
+        ruby-version: ['2.5']
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Rubocop
       uses: reviewdog/action-rubocop@v1
       with:
         github_token: ${{ secrets.github_token }}
+    - name: Install dependencies
+      run: bundle install
+    - name: make
+      run: make
