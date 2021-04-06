@@ -30,9 +30,5 @@ jobs:
       uses: reviewdog/action-rubocop@v1
       with:
         github_token: ${{ secrets.github_token }}
-    - name: Set up nokogiri
-      run: bundle install
     - name: make
-      run: |
-        bundle install
-        make
+      run: make
