@@ -34,4 +34,6 @@ jobs:
     - name: Set up nokogiri
       run: bundle install
     - name: make
-      run: make
+      run: |
+        bundle install
+        make
