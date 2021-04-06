@@ -33,4 +33,6 @@ jobs:
       with:
         github_token: ${{ secrets.github_token }}
     - name: make
-      run: make
+      run: |
+        bundle install
+        make
