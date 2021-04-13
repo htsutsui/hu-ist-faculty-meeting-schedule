@@ -29,7 +29,7 @@ class Array
 
   def to_csv_a(header)
     r = [header]
-    r + map { |i| header.map { |k| i[k]==nil ? "" : i[k] } }
+    r + map { |i| header.map { |k| i[k] || '' } }
   end
 end
 
