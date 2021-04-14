@@ -4,6 +4,7 @@
 require 'nokogiri'
 require 'csv'
 require 'yaml'
+require 'time'
 
 # https://www.eng.hokudai.ac.jp/event/h_meeting.php
 
@@ -14,6 +15,35 @@ class String
   # a simple version of https://github.com/ikayzo/mojinizer .
   def normalize_zen_han
     tr('０-９Ａ-Ｚ', '0-9A-Z')
+  end
+
+  def parse_date(year)
+    case self
+    when /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)$/
+      day = $LAST_MATCH_INFO[2..3].map(&:to_i)
+      year = $1.to_i + 2018 if $1
+      end_date = date = Date.new(year, *day)
+    when /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)～(\d+)月(\d+)日\(.\)$/
+      day = $LAST_MATCH_INFO[2..5].map(&:to_i)
+      year = $1.to_i + 2018 if $1
+      date = Date.new(year, *day[0..1])
+      end_date = (Date.new(year, *day[2..3]) + 1)
+    else
+      raise
+    end
+    [year, date, end_date]
+  end
+end
+
+class Date
+  def to_s
+    strftime('%m/%d/%Y')
+  end
+end
+
+class Time
+  def to_s
+    strftime('%H:%M')
   end
 end
 
@@ -30,6 +60,45 @@ class Array
   def to_csv_a(header)
     r = [header]
     r + map { |i| header.map { |k| i[k] } }
+  end
+
+  # See https://support.google.com/calendar/answer/37118
+  # The default duration is 3hrs.
+  def to_csv_a_google_calendar(header, default_duration = 3 * 60 * 60)
+    prev_time = nil
+    year = nil
+    d = map do |i|
+      all_day = false
+      end_time = nil
+      if (time = i['時間']) == '引き続き'
+        time = prev_time
+      elsif time
+        prev_time = time
+      else
+        all_day = true
+      end
+      if time
+        time = Time.parse(time)
+        end_time = time + default_duration
+      end
+      year, date, end_date = i['開催月日'].parse_date(year)
+      # 開催月日,時間,会議名,主な審議事項,備考
+      description = header.map do |j|
+        i[j] && "#{j}: #{i[j]}"
+      end.compact.join("\n")
+      {
+        'Subject' => (i['会議名'] || i['備考']),
+        'Start Date' => date,
+        'Start Time' => time,
+        'End Date' => end_date,
+        'End Time' => end_time,
+        'All Day Event' => all_day ? 'True' : 'False',
+        'Description' => description
+        # 'Location'=>,
+        # 'Private'=>,
+      }
+    end
+    d.to_csv_a(d[0].keys)
   end
 end
 
@@ -76,6 +145,7 @@ all = table.to_h_a
 
 open('meetings.yaml', 'w') { |fp| fp.write(YAML.dump(all)) }
 CSV.open('meetings.csv', 'w') { |fp| all.to_csv_a(header).map { |i| fp << i } }
+CSV.open('meetings_google_calendar.csv', 'w') { |fp| all.to_csv_a_google_calendar(header).map { |i| fp << i } }
 
 ist = all.map do |i|
   if (j = i['会議名']) =~ /^\((.)\)(.*)/
@@ -89,6 +159,7 @@ end.compact
 
 open('meetings_ist.yaml', 'w') { |fp| fp.write(YAML.dump(ist)) }
 CSV.open('meetings_ist.csv', 'w') { |fp| ist.to_csv_a(header).map { |i| fp << i } }
+CSV.open('meetings_ist_google_calendar.csv', 'w') { |fp| ist.to_csv_a_google_calendar(header).map { |i| fp << i } }
 
 # Local Variables:
 # ruby-indent-level: 2
