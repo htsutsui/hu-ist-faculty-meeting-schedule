@@ -66,9 +66,9 @@ class Array
   def to_csv_a_google_calendar(header, default_duration = 3 * 60 * 60)
     prev_time = nil
     year = nil
-    end_time = nil
     d = map do |i|
       all_day = false
+      end_time = nil
       if (time = i['時間']) == '引き続き'
         time = prev_time
       elsif time
