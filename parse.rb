@@ -40,6 +40,7 @@ class Date
     strftime('%m/%d/%Y')
   end
 end
+
 class Time
   def to_s
     strftime('%H:%M')
