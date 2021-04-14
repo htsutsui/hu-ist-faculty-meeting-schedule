@@ -4,6 +4,7 @@
 require 'nokogiri'
 require 'csv'
 require 'yaml'
+require 'time'
 
 # https://www.eng.hokudai.ac.jp/event/h_meeting.php
 
@@ -39,6 +40,11 @@ class Date
     strftime('%m/%d/%Y')
   end
 end
+class Time
+  def to_s
+    strftime('%H:%M')
+  end
+end
 
 class Array
   def to_h_a
@@ -56,9 +62,11 @@ class Array
   end
 
   # See https://support.google.com/calendar/answer/37118
-  def to_csv_a_google_calendar(header)
+  # The default duration is 3hrs.
+  def to_csv_a_google_calendar(header, default_duration = 3 * 60 * 60)
     prev_time = nil
     year = nil
+    end_time = nil
     d = map do |i|
       all_day = false
       if (time = i['時間']) == '引き続き'
@@ -67,6 +75,10 @@ class Array
         prev_time = time
       else
         all_day = true
+      end
+      if time
+        time = Time.parse(time)
+        end_time = time + default_duration
       end
       year, date, end_date = i['開催月日'].parse_date(year)
       # 開催月日,時間,会議名,主な審議事項,備考
@@ -78,7 +90,7 @@ class Array
         'Start Date' => date,
         'Start Time' => time,
         'End Date' => end_date,
-        # 'End Time'=>,
+        'End Time' => end_time,
         'All Day Event' => all_day ? 'True' : 'False',
         'Description' => description
         # 'Location'=>,
