@@ -20,7 +20,8 @@ class String
   def parse_date(year)
     raise unless self =~ /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)(?:～(\d+)月(\d+)日\(.\)){0,1}$/
 
-    day = $LAST_MATCH_INFO[2..nil].compact.map(&:to_i)
+    (a = $LAST_MATCH_INFO.to_a)[0..1] = []
+    day = a.compact.map(&:to_i)
     year = $1.to_i + 2018 if $1
     end_date = date = Date.new(year, *day[0..1])
     end_date = (Date.new(year, *day[2..3]) + 1) if day.size > 2
