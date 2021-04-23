@@ -18,20 +18,58 @@ class String
   end
 
   def parse_date(year)
-    case self
-    when /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)$/
-      day = $LAST_MATCH_INFO[2..3].map(&:to_i)
-      year = $1.to_i + 2018 if $1
-      end_date = date = Date.new(year, *day)
-    when /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)～(\d+)月(\d+)日\(.\)$/
-      day = $LAST_MATCH_INFO[2..5].map(&:to_i)
-      year = $1.to_i + 2018 if $1
-      date = Date.new(year, *day[0..1])
-      end_date = (Date.new(year, *day[2..3]) + 1)
-    else
-      raise
-    end
+    raise unless self =~ /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)(?:～(\d+)月(\d+)日\(.\)){0,1}$/
+
+    (a = $LAST_MATCH_INFO.to_a)[0..1] = []
+    day = a.compact.map(&:to_i)
+    year = $1.to_i + 2018 if $1
+    end_date = date = Date.new(year, *day[0..1])
+    end_date = (Date.new(year, *day[2..3]) + 1) if day.size > 2
     [year, date, end_date]
+  end
+end
+
+class Hash
+  class << self; attr_accessor :prev_time, :year end
+
+  def parse_time
+    @end_time = nil
+    if (@time = self['時間']) == '引き続き'
+      @time = self.class.prev_time
+    elsif @time
+      self.class.prev_time = @time
+    end
+    @all_day = @time.nil?
+    return unless @time
+
+    @time = Time.parse(@time)
+    @end_time = @time + @default_duration
+  end
+
+  def google_calendar_parse
+    c = self.class
+    parse_time
+    c.year, @date, @end_date = self['開催月日'].parse_date(c.year)
+    @description = @header.map do |j| # 開催月日,時間,会議名,主な審議事項,備考
+      self[j] && "#{j}: #{self[j]}"
+    end.compact.join("\n")
+    google_calendar_parse_h
+  end
+
+  def google_calendar_parse_h
+    { 'Subject' => (self['会議名'] || self['備考']),
+      'Start Date' => @date,
+      'Start Time' => @time,
+      'End Date' => @end_date,
+      'End Time' => @end_time,
+      'All Day Event' => @all_day ? 'True' : 'False',
+      'Description' => @description }
+  end
+
+  def to_csv_a_google_calendar(header, default_duration = 3 * 60 * 60)
+    @default_duration = default_duration
+    @header = header
+    google_calendar_parse
   end
 end
 
@@ -65,38 +103,8 @@ class Array
   # See https://support.google.com/calendar/answer/37118
   # The default duration is 3hrs.
   def to_csv_a_google_calendar(header, default_duration = 3 * 60 * 60)
-    prev_time = nil
-    year = nil
     d = map do |i|
-      all_day = false
-      end_time = nil
-      if (time = i['時間']) == '引き続き'
-        time = prev_time
-      elsif time
-        prev_time = time
-      else
-        all_day = true
-      end
-      if time
-        time = Time.parse(time)
-        end_time = time + default_duration
-      end
-      year, date, end_date = i['開催月日'].parse_date(year)
-      # 開催月日,時間,会議名,主な審議事項,備考
-      description = header.map do |j|
-        i[j] && "#{j}: #{i[j]}"
-      end.compact.join("\n")
-      {
-        'Subject' => (i['会議名'] || i['備考']),
-        'Start Date' => date,
-        'Start Time' => time,
-        'End Date' => end_date,
-        'End Time' => end_time,
-        'All Day Event' => all_day ? 'True' : 'False',
-        'Description' => description
-        # 'Location'=>,
-        # 'Private'=>,
-      }
+      i.to_csv_a_google_calendar(header, default_duration)
     end
     d.to_csv_a(d[0].keys)
   end
