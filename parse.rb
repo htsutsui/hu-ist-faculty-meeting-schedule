@@ -91,7 +91,7 @@ class Array
     data.map do |v|
       j = header.each_with_index.map { |i, h| [i, v[h]] }
       j.delete_if { |i| i[1].empty? or i[1].nil? }
-      Hash[j]
+      j.to_h
     end
   end
 
@@ -159,7 +159,7 @@ ist = all.map do |i|
   if (j = i['会議名']) =~ /^\((.)\)(.*)/
     k = $1
     name = $2
-    i if k == '情' && name =~ /教授会/ || j == '(工)学部教授会'
+    i if (k == '情' && name =~ /教授会/) || j == '(工)学部教授会'
   else
     i
   end
