@@ -18,7 +18,7 @@ class String
   end
 
   def parse_date(year)
-    raise unless self =~ /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日\(.\)(?:～(\d+)月(\d+)日\(.\)){0,1}$/
+    raise unless self =~ /^(?:令和(\d+)年){0,1}(\d+)月(\d+)日(?:\(.\)){0,1}(?:～(\d+)月(\d+)日(?:\(.\)){0,1}){0,1}$/
 
     (a = $LAST_MATCH_INFO.to_a)[0..1] = []
     day = a.compact.map(&:to_i)
@@ -143,13 +143,30 @@ module Table
     values
   end
 
+  def check_festival(str)
+    str.last =~ %r{^(.*)\((\d+)/(\d+)-(\d+)\)} &&
+      ["#{$2}月#{$3}日～#{$2}月#{$4}日", '', '', '', $1]
+  end
+
+  def check_delay(data, delay, values)
+    if !delay.empty? && values[0][1].zero?
+      [data + delay, []]
+    else
+      [data, delay]
+    end
+  end
+
   def to_a
     return @a if @a
 
     prev = nil
-    @a = xpath('.//tr').map do |i|
+    delay = []
+    @a = xpath('.//tr').inject([]) do |a, i|
       prev = values = build_row(i, prev)
-      values.map { |j| j[0].normalize_zen_han }
+      a << (i = values.map { |j| j[0].normalize_zen_han })
+      (f = check_festival(i)) && (delay << f)
+      a, delay = check_delay(a, delay, values)
+      a
     end
   end
 
