@@ -41,6 +41,11 @@
   主な審議事項: 年度計画
   備考: 大学祭(6/3-5)
 - 開催月日: !ruby/struct:MyDate
+    orig: 6月3日～6月5日
+    date: 06/03/2022
+    date_end: 06/05/2022
+  備考: 大学祭
+- 開催月日: !ruby/struct:MyDate
     orig: 10月6日(木)
     date: 10/06/2022
     date_end: 
