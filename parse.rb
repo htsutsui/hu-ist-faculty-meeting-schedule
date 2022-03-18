@@ -14,7 +14,7 @@ table = doc.xpath('//*[@id="eventTable"]/table')
 class String
   # a simple version of https://github.com/ikayzo/mojinizer .
   def normalize_zen_han
-    tr('０-９Ａ-Ｚ', '0-9A-Z')
+    tr('０-９Ａ-Ｚ（）', '0-9A-Z()')
   end
 
   def parse_date(year)
@@ -23,14 +23,25 @@ class String
     (a = $LAST_MATCH_INFO.to_a)[0..1] = []
     day = a.compact.map(&:to_i)
     year = $1.to_i + 2018 if $1
-    end_date = date = Date.new(year, *day[0..1])
-    end_date = (Date.new(year, *day[2..3]) + 1) if day.size > 2
+    date = Date.new(year, *day[0..1])
+    end_date = Date.new(year, *day[2..3]) if day.size > 2
     [year, date, end_date]
   end
 end
 
+MyDate = Struct.new(:orig, :date, :date_end)
+class MyDate
+  def to_s
+    orig
+  end
+
+  def to_google_calendar
+    [date, date_end ? date_end + 1 : date]
+  end
+end
+
 class Hash
-  class << self; attr_accessor :prev_time, :year end
+  class << self; attr_accessor :prev_time end
 
   def parse_time
     @end_time = nil
@@ -47,9 +58,8 @@ class Hash
   end
 
   def google_calendar_parse
-    c = self.class
     parse_time
-    c.year, @date, @end_date = self['開催月日'].parse_date(c.year)
+    @date, @end_date = self['開催月日'].to_google_calendar
     @description = @header.map do |j| # 開催月日,時間,会議名,主な審議事項,備考
       self[j] && "#{j}: #{self[j]}"
     end.compact.join("\n")
@@ -71,9 +81,16 @@ class Hash
     @header = header
     google_calendar_parse
   end
+
+  def parse_date(year, date_key = '開催月日')
+    year, date, end_date = (i = self[date_key]).parse_date(year)
+    self[date_key] = MyDate.new(i, date, end_date)
+    year
+  end
 end
 
 class Date
+  # https://support.google.com/calendar/answer/37118
   def to_s
     strftime('%m/%d/%Y')
   end
@@ -88,10 +105,12 @@ end
 class Array
   def to_h_a
     header, *data = self
+    year = nil
     data.map do |v|
-      j = header.each_with_index.map { |i, h| [i, v[h]] }
+      j = header.each_with_index.map { |i, h| [i, v[h].strip] }
       j.delete_if { |i| i[1].empty? or i[1].nil? }
-      j.to_h
+      year = (j = j.to_h).parse_date(year)
+      j
     end
   end
 
