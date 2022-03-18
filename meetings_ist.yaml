@@ -27,6 +27,11 @@
   主な審議事項: 年度計画
   備考: 大学祭(6/4-6)
 - 開催月日: !ruby/struct:MyDate
+    orig: 6月4日～6月6日
+    date: 06/04/2021
+    date_end: 06/06/2021
+  備考: 大学祭
+- 開催月日: !ruby/struct:MyDate
     orig: 6月3日(木)
     date: 06/03/2021
     date_end: 
