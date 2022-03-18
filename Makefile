@@ -1,5 +1,5 @@
 targets=meetings.csv meetings.yaml meetings_ist.yaml README.md
-year=2022
+year=2021
 all: $(targets)
 
 meetings.html: # Makefile
