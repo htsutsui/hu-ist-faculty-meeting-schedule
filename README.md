@@ -1,8 +1,10 @@
 # 2022 HU IST Faculty Meeting Schedule #
 
 [北海道大学 工学系教授会・代議員会等
-開催日程](https://www.eng.hokudai.ac.jp/event/h_meeting.php?2022)
+開催日程](https://www.eng.hokudai.ac.jp/event/h_meeting.php?y=2022)
 の HTML のテーブルを CSV および YAML に変換する Script．`rowspan` のみ考慮．
+
+The URL query string, `y=2022`, is only valid at the end of each fiscal year. So old branches other than `main` do not work correctly.
 
 ## Requirements ##
 
