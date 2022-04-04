@@ -10,6 +10,8 @@ require 'time'
 
 doc = Nokogiri::HTML(File.open(ARGV[0]))
 table = doc.xpath('//*[@id="eventTable"]/table')
+table = table.empty? && doc.xpath('//table')
+raise if table.size != 1
 
 class String
   # a simple version of https://github.com/ikayzo/mojinizer .
