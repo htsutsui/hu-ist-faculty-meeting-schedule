@@ -206,7 +206,7 @@ ist = all.map do |i|
       if time == '引き続き' && !date_ist_h[date]
         i = i.dup
         i['会議名'] += "(#{time})"
-        time = date_h[date]
+        i['時間'] = date_h[date]
       end
       date_ist_h[date] = date_ist_h[date] || time
       i
