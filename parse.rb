@@ -193,11 +193,24 @@ open('meetings.yaml', 'w') { |fp| fp.write(YAML.dump(all)) }
 CSV.open('meetings.csv', 'w') { |fp| all.to_csv_a(header).map { |i| fp << i } }
 CSV.open('meetings_google_calendar.csv', 'w') { |fp| all.to_csv_a_google_calendar(header).map { |i| fp << i } }
 
+date_h = {}
+date_ist_h = {}
 ist = all.map do |i|
   if (j = i['会議名']) =~ /^\((.)\)(.*)/
     k = $1
     name = $2
-    i if (k == '情' && name =~ /教授会/) || j == '(工)学部教授会'
+    date = i['開催月日'].date
+    time = i['時間']
+    date_h[date] = date_h[date] || time
+    if (k == '情' && name =~ /教授会/) || j == '(工)学部教授会'
+      if time == '引き続き' && !date_ist_h[date]
+        i = i.dup
+        i['会議名'] += "(#{time})"
+        time = date_h[date]
+      end
+      date_ist_h[date] = date_ist_h[date] || time
+      i
+    end
   else
     i
   end
